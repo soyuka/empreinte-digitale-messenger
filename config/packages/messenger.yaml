@@ -1,0 +1,18 @@
+framework:
+    messenger:
+        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
+        # failure_transport: failed
+
+        transports:
+            # https://symfony.com/doc/current/messenger.html#transport-configuration
+            # async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            image_download: 'doctrine://default?queue_name=image_download'
+            zip_creation: 'doctrine://default?queue_name=zip_creation'
+            # failed: 'doctrine://default?queue_name=failed'
+            # sync: 'sync://'
+
+        routing:
+            App\Message\DownloadImageMessage: image_download
+            App\Message\ImageDownloadedMessage: zip_creation
+            # Route your messages to the transports
+            # 'App\Message\YourMessage': async

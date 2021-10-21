@@ -31,6 +31,7 @@ class ImagesDownloadedMiddleware implements MiddlewareInterface
             return $stack->next()->handle($envelope, $stack);
         }
 
+        // Obviously not perfect and can lead to issues if the lock stays forever...
         if (!flock($handle = $this->getHandle($stamp), LOCK_EX)) {
             usleep(1e+6);
             return $this->handle($envelope, $stack);

@@ -1,30 +1,50 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\MessageHandler;
 
-use App\Message\ImageDownloadedMessage;
-use Symfony\Component\Lock\Key;
-use Symfony\Component\Lock\LockFactory;
+use App\Message\ZipCreationMessage;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
+use Symfony\Component\Mime\Email;
+use ZipArchive;
 
 final class ZipCreationMessageHandler implements MessageHandlerInterface
 {
-    private $imagesDownloaded = [];
-
-    public function __invoke(ImageDownloadedMessage $message)
+    public function __construct(private string $storageDirectory)
     {
-        if (!isset($this->imagesDownloaded[$message->getId()])) {
-            $this->imagesDownloaded[$message->getId()] = 0;
+    }
+
+    public function __invoke(ZipCreationMessage $message)
+    {
+        $directory = $this->storageDirectory.\DIRECTORY_SEPARATOR.$message->getId();
+
+        if (!$handle = opendir($directory)) {
+            throw new UnrecoverableMessageHandlingException(sprintf('The "%s" directory to Zip does not exist.', $directory));
         }
 
-        $this->imagesDownloaded[$message->getId()]++;
+        $zipName = $this->storageDirectory.\DIRECTORY_SEPARATOR.$message->getId().'.zip';
+        $zip = new ZipArchive();
+        $zip->open($zipName, ZipArchive::CREATE);
 
-        dump('Image downloaded', $this->imagesDownloaded[$message->getId()]);
-
-        if ($this->imagesDownloaded[$message->getId()] === $message->getNum()) {
-            unset($this->imagesDownloaded[$message->getId()]);
-            dump('CREATE ZIP');
-
+        while (false !== ($entry = readdir($handle))) {
+            if ('.' != $entry && '..' != $entry) {
+                $zip->addFile($directory.\DIRECTORY_SEPARATOR.$entry);
+            }
         }
+
+        closedir($handle);
+        $zip->close();
+
+        $email = (new Email())
+            ->from('hello@example.com')
+            ->to('you@example.com')
+            ->attachFromPath($zipName)
+            ->subject('Your ZIP is ready')
+            ->text('Check it out!');
+
+        dump($email);
+        // $mailer->send($email);
     }
 }

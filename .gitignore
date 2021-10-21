@@ -7,4 +7,6 @@
 /public/bundles/
 /var/
 /vendor/
+.php-cs-fixer.cache
+dump.rdb
 ###< symfony/framework-bundle ###

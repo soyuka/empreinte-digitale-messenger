@@ -6,7 +6,7 @@ framework:
 
         transports:
             image_download: 'redis://localhost:6379/images_download'
-            zip_creation: 'redis://localhost:6379/images_download'
+            zip_creation: 'redis://localhost:6379/zip_creation'
 
         routing:
             App\Message\DownloadImageMessage: image_download

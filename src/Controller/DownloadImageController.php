@@ -30,7 +30,7 @@ class DownloadImageController extends AbstractController
             'http://www.serebii.net/pokemongo/pokemon/010.png',
         ];
 
-        $id = Uuid::v4();
+        $id = (string) Uuid::v4();
         $num = \count($images);
 
         foreach ($images as $image) {

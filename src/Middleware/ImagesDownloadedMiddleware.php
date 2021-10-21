@@ -31,7 +31,12 @@ class ImagesDownloadedMiddleware implements MiddlewareInterface
             return $stack->next()->handle($envelope, $stack);
         }
 
-        rewind($handle = $this->getHandle($stamp));
+        if (!flock($handle = $this->getHandle($stamp), LOCK_EX)) {
+            usleep(1e+6);
+            return $this->handle($envelope, $stack);
+        }
+
+        rewind($handle);
         $v = (int) stream_get_contents($handle);
 
         // We downloaded every file
@@ -42,6 +47,7 @@ class ImagesDownloadedMiddleware implements MiddlewareInterface
 
         rewind($handle);
         fwrite($handle, (string) $v);
+        flock($handle, LOCK_UN);
 
         $envelope = $envelope->with($stamp->withDownloading(2));
 
